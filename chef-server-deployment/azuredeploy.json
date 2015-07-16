@@ -25,12 +25,6 @@
             "metadata": {
                 "description": "This is the the password you wish to assign to your VMs admin account"
             }
-        },
-        "vmSize": {
-            "type": "string",
-            "metadata": {
-                "description": "Size of VM"
-            }
         }
     },
     "variables": {
@@ -44,14 +38,14 @@
         "subnet1Prefix": "10.0.0.0/24",
         "vmStorageAccountContainerName": "vhds",
         "publicIPAddressType": "Dynamic",
-        "publicIPAddressName": "myPublicIP",
+        "publicIPAddressName": "chefPublicIP",
         "storageAccountType": "Standard_LRS",
         "vmName": "SOSSEChefServer",
+        "vmSize": "Standard_A3",
         "virtualNetworkName": "chefVNET",
         "nicName": "chefServerVMNic",
         "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
-        "subnet1Ref": "[concat(variables('vnetID'),'/subnets/',variables('subnet1Name'))]",
-        "installMongoTemplateurl": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-dependency-between-scripts-using-extensions/install-mongo.json"
+        "subnet1Ref": "[concat(variables('vnetID'),'/subnets/',variables('subnet1Name'))]"
     },
     "resources": [
         {
@@ -133,7 +127,7 @@
             ],
             "properties": {
                 "hardwareProfile": {
-                    "vmSize": "[parameters('vmSize')]"
+                    "vmSize": "[variables('vmSize')]"
                 },
                 "osProfile": {
                     "computername": "[variables('vmName')]",
@@ -167,7 +161,7 @@
         },
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('vmName'),'/configuremongo')]",
+            "name": "[concat(variables('vmName'),'/chefserversetup')]",
             "apiVersion": "2015-05-01-preview",
             "location": "[variables('location')]",
             "dependsOn": [
@@ -179,9 +173,9 @@
                 "typeHandlerVersion": "1.2",
                 "settings": {
                     "fileUris": [
-                        "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-dependency-between-scripts-using-extensions/mongo-configure-ubuntu.sh"
+                        "https://raw.githubusercontent.com/pennyliangliping/Azure/master/chef-server-deployment/chefserver_setup.sh"
                     ],
-                    "commandToExecute": "sh mongo-configure-ubuntu.sh"
+                    "commandToExecute": "sh chefserver_setup.sh"
                 }
             }
         }
