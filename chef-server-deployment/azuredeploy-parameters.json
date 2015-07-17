@@ -1,0 +1,14 @@
+{
+    "newStorageAccountName" : {
+        "value":"chefserversa"
+    },
+    "adminUsername": {
+        "value": "auto"
+    },
+    "adminPassword": {
+        "value": "Dell@123"
+    },
+    "dnsNameForPublicIP": {
+        "value": "sossechefserver"
+    }
+}
