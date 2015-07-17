@@ -1,6 +1,7 @@
 #!/bin/bash
 # setup chef server and chef workstation
 
+# variables
 chef_server_deb="chef-server-core_12.1.0-1_amd64.deb"
 chef_server_url="https://web-dl.packagecloud.io/chef/stable/packages/ubuntu/trusty/${chef_server_deb}"
 chef_admin_user="auto"
@@ -8,12 +9,11 @@ chef_damin_pw="Dell@123"
 chef_admin_pem="/home/auto/${chef_admin_user}.pem"
 chef_org_name="chef"
 chef_org_pem="/home/auto/${chef_org_name}-validator.pem"
-
 chef_client_deb="chef_12.4.1-1_amd64.deb"
 chef_client_url="https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/10.04/x86_64/${chef_client_deb}"
-
 chef_dk_deb="chefdk_0.6.2-1_amd64.deb"
 chef_dk_url="https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/12.04/x86_64/${chef_dk_deb}"
+
 ###########################################################
 #                setup for chef server                    #
 ###########################################################
@@ -48,6 +48,7 @@ if [ $? != 0 ]; then
     echo "dpkg install chef server fail!"
     exit 3
 fi
+rm $chef_server_deb
 
 # config chef server
 sudo chef-server-ctl reconfigure
@@ -104,6 +105,7 @@ if [ $? != 0 ]; then
     echo "dpkg install chef client fail!"
     exit 9
 fi
+rm $chef_client_url
 
 # clone chef-repo
 git clone https://github.com/chef/chef-repo.git
@@ -129,9 +131,9 @@ cookbook_path            [\"#{current_dir}/../cookbooks\"]"
 
 echo "$knife_config" > knife.rb
 
-cp $chef_admin_pem ./chef-repo/.chef
-cp $chef_org_pem ./chef-repo/.chef
-cp knife.rb ./chef-repo/.chef
+mv $chef_admin_pem ./chef-repo/.chef
+mv $chef_org_pem ./chef-repo/.chef
+mv knife.rb ./chef-repo/.chef
 cd ./chef-repo
 knife ssl fetch
 
@@ -154,6 +156,7 @@ if [ $? != 0 ]; then
     echo "dpkg install chef dk fail!"
     exit 13
 fi
+rm $chef_dk_deb
 
 # update the bash env for chef
 `chef shell-init bash`
