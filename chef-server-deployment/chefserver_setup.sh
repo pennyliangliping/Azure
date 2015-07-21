@@ -105,7 +105,7 @@ if [ $? != 0 ]; then
     echo "dpkg install chef client fail!"
     exit 9
 fi
-rm $chef_client_url
+rm $chef_client_deb
 
 # clone chef-repo
 git clone https://github.com/chef/chef-repo.git
@@ -150,7 +150,7 @@ if [ $? != 0 ]; then
     exit 12
 fi
 
-# install chef client
+# install chef dk
 sudo dpkg -i $chef_dk_deb
 if [ $? != 0 ]; then
     echo "dpkg install chef dk fail!"
