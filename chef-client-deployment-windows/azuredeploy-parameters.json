@@ -1,0 +1,20 @@
+{
+    "adminUsername": {
+        "value": "auto"
+    },
+    "adminPassword": {
+        "value": "Dell@123"
+    },
+    "newStorageAccountName": {
+        "value" : "autotestenvsa"
+    },
+    "dnsNameForPIPPrefix": {
+        "value": "autotestnode"
+    },
+    "vmNamePrefix": {
+        "value": "autotestnode"
+    },
+    "numberOfInstances": {
+        "value": 2
+    }
+}
