@@ -13,15 +13,16 @@ chef_client_deb="chef_12.4.1-1_amd64.deb"
 chef_client_url="https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/10.04/x86_64/${chef_client_deb}"
 chef_dk_deb="chefdk_0.6.2-1_amd64.deb"
 chef_dk_url="https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/12.04/x86_64/${chef_dk_deb}"
+vm_admin_user="auto"
 
 ###########################################################
 #                setup for chef server                    #
 ###########################################################
 # create home folder in first login
-if [ ! -e /home/auto ]; then
-    mkdir /home/auto
+if [ ! -e /home/$vm_admin_user ]; then
+    mkdir /home/$vm_admin_user
 fi
-cd /home/auto
+cd /home/$vm_admin_user
 
 # ensure that the VM name is the same with the beginning of fqdn in Azure template
 hostname=`hostname`
@@ -114,7 +115,7 @@ if [ ! -e ./chef-repo ]; then
     exit 10
 fi
 
-# copy <user>.pem <org>.pem knife.rb to .chef 
+# copy <user>.pem <org>.pem knife.rb to .chef folder
 mkdir ./chef-repo/.chef
 
 knife_config="# See https://docs.getchef.com/config_rb_knife.html for more information on knife configuration options
@@ -125,7 +126,7 @@ log_location             STDOUT
 node_name                \"${chef_admin_user}\"
 client_key               \"#{current_dir}/${chef_admin_user}.pem\"
 validation_client_name   \"${chef_org_name}-validator\"
-validation_key           \"#{current_dir}/${org}-validator.pem\"
+validation_key           \"#{current_dir}/${chef_org_name}-validator.pem\"
 chef_server_url          \"https://${chef_fqdn}/organizations/${chef_org_name}\"
 cookbook_path            [\"#{current_dir}/../cookbooks\"]"
 
@@ -168,3 +169,7 @@ if [ $? != 0 ]; then
     exit 14
 fi
 
+# change the owner and group to 
+cd /home/$vm_admin_user
+sudo chown -R $vm_admin_user chef-repo/
+sudo chgrp -R $vm_admin_user chef-repo/
