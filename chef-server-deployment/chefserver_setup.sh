@@ -169,6 +169,22 @@ if [ $? != 0 ]; then
     exit 14
 fi
 
+# download all cookbooks needed
+cd /home/$vm_admin_user/chef-repo/cookbooks
+git clone https://github.com/opscode-cookbooks/chef_handler.git
+git clone https://github.com/sethvargo/chef-sugar.git
+git clone https://github.com/opscode-cookbooks/openssl.git
+git clone https://github.com/opscode-cookbooks/windows.git
+git clone https://github.com/pennyliangliping/sql_server.git
+
+# be careful for the cookbook upload order
+# dependency may cause upload fail
+knife cookbook upload chef_handler
+knife cookbook upload chef-sugar
+knife cookbook upload openssl
+knife cookbook upload windows
+knife cookbook upload sql_server
+
 # change the owner and group to 
 cd /home/$vm_admin_user
 sudo chown -R $vm_admin_user chef-repo/
