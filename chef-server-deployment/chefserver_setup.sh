@@ -176,6 +176,24 @@ if [ $res != $chef_admin_user ]; then
     exit 11
 fi
 
+# download all cookbooks needed
+cd /home/$vm_admin_user/chef-repo/cookbooks
+git clone https://github.com/opscode-cookbooks/chef_handler.git
+git clone https://github.com/sethvargo/chef-sugar.git
+git clone https://github.com/opscode-cookbooks/openssl.git
+git clone https://github.com/opscode-cookbooks/windows.git
+git clone https://github.com/pennyliangliping/sql_server.git
+
+# be careful for the cookbook upload order
+# dependency may cause upload failure
+knife cookbook upload chef_handler
+knife cookbook upload chef-sugar
+knife cookbook upload openssl
+knife cookbook upload windows
+knife cookbook upload sql_server
+
+cd /home/$vm_admin_user/chef-repo/
+
 # download chef dk
 echo "Downloading chef dk"
 func_download_deb $chef_dk_url
@@ -198,21 +216,6 @@ if [ $? != 0 ]; then
     exit 13
 fi
 
-# download all cookbooks needed
-cd /home/$vm_admin_user/chef-repo/cookbooks
-git clone https://github.com/opscode-cookbooks/chef_handler.git
-git clone https://github.com/sethvargo/chef-sugar.git
-git clone https://github.com/opscode-cookbooks/openssl.git
-git clone https://github.com/opscode-cookbooks/windows.git
-git clone https://github.com/pennyliangliping/sql_server.git
-
-# be careful for the cookbook upload order
-# dependency may cause upload failure
-knife cookbook upload chef_handler
-knife cookbook upload chef-sugar
-knife cookbook upload openssl
-knife cookbook upload windows
-knife cookbook upload sql_server
 
 # change the owner and group to normal user
 cd /home/$vm_admin_user
