@@ -181,7 +181,7 @@ cd /home/$vm_admin_user/chef-repo/cookbooks
 git clone https://github.com/opscode-cookbooks/chef_handler.git
 git clone https://github.com/sethvargo/chef-sugar.git
 git clone https://github.com/opscode-cookbooks/openssl.git
-git clone https://github.com/opscode-cookbooks/windows.git
+git clone https://github.com/pennyliangliping/windows.git
 git clone https://github.com/pennyliangliping/sql_server.git
 
 # be careful for the cookbook upload order
