@@ -17,8 +17,29 @@ vm_admin_user="auto"
 download_retry_count=3
 download_retry_interval=10
 
+# functions
+
+# Function used to download deb package from network
+func_download_deb()
+{
+    wget $1
+    res=$?
+    i=0
+    # retry if fail
+    while [ $i -lt $download_retry_count ] && [ $res -ne 0 ]; do
+        sleep $download_retry_interval
+        echo "retrying the ${i}th time"
+        wget $1
+        res=$?
+        i=$((i+1))
+    done
+    if [ $res -ne 0 ]; then
+        echo "download fail!"
+        exit 2
+    fi
+}
 ###########################################################
-#                setup for chef server                    #
+#                for chef server                          #
 ###########################################################
 # create home folder in first login
 if [ ! -e /home/$vm_admin_user ]; then
@@ -26,33 +47,24 @@ if [ ! -e /home/$vm_admin_user ]; then
 fi
 cd /home/$vm_admin_user
 
-# ensure that the VM name is the same with the beginning of fqdn in Azure template
+# ensure that the VM name is the same with the beginning of fqdn 
+# in Azure template
 hostname=`hostname`
 chef_fqdn="${hostname}.eastasia.cloudapp.azure.com"
-# change the FQDN for the ubuntu server before installing chef server
+# change the FQDN for the ubuntu server before installing chef 
+# server, because it will use FQDN as the server url
 sudo echo "127.0.1.1 ${chef_fqdn} ${hostname}" >> /etc/hosts
 sudo service hostname restart
+# check if the FQDN is as expected
 res=`hostname -f`
 if [ $res != $chef_fqdn ]; then
     echo "changing FQDN fail!"
     exit 1
 fi
 
-# download chef server
-wget $chef_server_url
-res=$?
-i=0
-while [ $i -lt $download_retry_count ] && [ $res -ne 0 ]; do
-    sleep $download_retry_interval
-    echo "retrying the ${i}th time for chef server"
-    wget $chef_server_url
-    res=$?
-    i=$((i+1))
-done
-if [ $res -ne 0 ]; then
-    echo "download chef server fail!"
-    exit 2
-fi
+# download chef server, and retry if fail some time
+echo "Downloading chef server"
+func_download_deb $chef_server_url
 
 # install chef server
 sudo dpkg -i $chef_server_deb
@@ -62,7 +74,9 @@ if [ $? != 0 ]; then
 fi
 rm $chef_server_deb
 
-# config chef server
+# reconfigure subcommand is used when configure changes are made to
+# chef server (normally chef-server.rb is modified). And after server
+# is installed, need to do configure
 sudo chef-server-ctl reconfigure
 if [ $? != 0 ]; then
     echo "reconfigure chef server fail!"
@@ -83,42 +97,32 @@ if [ $? != 0 ]; then
     exit 6
 fi
 
-# create a new administor user
+# create a new administor user, generate the private key
 chef-server-ctl user-create $chef_admin_user sosse sosse auto@auto.com $chef_damin_pw --filename $chef_admin_pem
 if [ $? != 0 ]; then
     echo "create chef server admin fail!"
-    exit 6
-fi
-
-# create a new organization
-chef-server-ctl org-create $chef_org_name "sosse, Inc." --association_user $chef_admin_user --filename $chef_org_pem
-if [ $? != 0 ]; then
-    echo "create chef server organization fail!"
     exit 7
 fi
 
+# create a new organization, associate the new administor user to 
+# this organization, generate the validation key which is needed
+# for the first connection between chef client and chef server
+chef-server-ctl org-create $chef_org_name "sosse, Inc." --association_user $chef_admin_user --filename $chef_org_pem
+if [ $? != 0 ]; then
+    echo "create chef server organization fail!"
+    exit 8
+fi
+
 ###########################################################
-#                setup for chef workstation               #
+#                setup chef workstation                   #
 ###########################################################
 # install all dependent packages
 sudo apt-get -y update
 sudo apt-get install -y git ruby1.9.1-full ruby make g++ zlib1g-dev
 
-# download chef client
-wget $chef_client_url
-res=$?
-i=0
-while [ $i -lt $download_retry_count ] && [ $res -ne 0 ]; do
-    sleep $download_retry_interval
-    echo "retrying the ${i}th time for chef client"
-    wget $chef_client_url
-    res=$?
-    i=$((i+1))
-done
-if [ $? -ne 0 ]; then
-    echo "download chef client fail!"
-    exit 8
-fi
+# download chef client, and retry if fail some time
+echo "Downloading chef client"
+func_download_deb $chef_client_url
 
 # install chef client
 sudo dpkg -i $chef_client_deb
@@ -128,14 +132,21 @@ if [ $? != 0 ]; then
 fi
 rm $chef_client_deb
 
-# clone chef-repo
+# clone chef-repo from github, and this is the working folder of chef
+# workstation
 git clone https://github.com/chef/chef-repo.git
 if [ ! -e ./chef-repo ]; then
     echo "clone chef-repo fail!"
     exit 10
 fi
 
-# copy <user>.pem <org>.pem knife.rb to .chef folder
+# when workstation connect to chef server, it needs to know the server
+# information and have authentication method. Folder .chef includes
+# all these things: 
+# <admin>.pem <validation>.pem -- private key for authentication
+# knife.rb -- includes server information
+#
+# move <admin>.pem <validation>.pem knife.rb to .chef folder
 mkdir ./chef-repo/.chef
 
 knife_config="# See https://docs.getchef.com/config_rb_knife.html for more information on knife configuration options
@@ -158,6 +169,7 @@ mv knife.rb ./chef-repo/.chef
 cd ./chef-repo
 knife ssl fetch
 
+# check if the connection between workstation and server is OK
 res=`knife user list`
 if [ $res != $chef_admin_user ]; then
     echo "knife ssl fetch fail!"
@@ -165,26 +177,14 @@ if [ $res != $chef_admin_user ]; then
 fi
 
 # download chef dk
-wget $chef_dk_url
-res=$?
-i=0
-while [ $i -lt $download_retry_count ] && [ $res -ne 0 ]; do
-    sleep $download_retry_interval
-    echo "retrying the ${i}th time for chef dk"
-    wget $chef_dk_url
-    res=$?
-    i=$((i+1))
-done
-if [ $? -ne 0 ]; then
-    echo "download chef dk fail!"
-    exit 12
-fi
+echo "Downloading chef dk"
+func_download_deb $chef_dk_url
 
 # install chef dk
 sudo dpkg -i $chef_dk_deb
 if [ $? != 0 ]; then
     echo "dpkg install chef dk fail!"
-    exit 13
+    exit 12
 fi
 rm $chef_dk_deb
 
@@ -195,7 +195,7 @@ rm $chef_dk_deb
 sudo gem install knife-windows
 if [ $? != 0 ]; then
     echo "install knife-winodows plugin fail!"
-    exit 14
+    exit 13
 fi
 
 # download all cookbooks needed
@@ -207,14 +207,14 @@ git clone https://github.com/opscode-cookbooks/windows.git
 git clone https://github.com/pennyliangliping/sql_server.git
 
 # be careful for the cookbook upload order
-# dependency may cause upload fail
+# dependency may cause upload failure
 knife cookbook upload chef_handler
 knife cookbook upload chef-sugar
 knife cookbook upload openssl
 knife cookbook upload windows
 knife cookbook upload sql_server
 
-# change the owner and group to 
+# change the owner and group to normal user
 cd /home/$vm_admin_user
 sudo chown -R $vm_admin_user chef-repo/
 sudo chgrp -R $vm_admin_user chef-repo/
