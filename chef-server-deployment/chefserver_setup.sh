@@ -14,6 +14,8 @@ chef_client_url="https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/10.04/
 chef_dk_deb="chefdk_0.6.2-1_amd64.deb"
 chef_dk_url="https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/12.04/x86_64/${chef_dk_deb}"
 vm_admin_user="auto"
+download_retry_count=3
+download_retry_interval=10
 
 ###########################################################
 #                setup for chef server                    #
@@ -38,7 +40,16 @@ fi
 
 # download chef server
 wget $chef_server_url
-if [ $? != 0 ]; then
+res=$?
+i=0
+while [ $i -lt $download_retry_count ] && [ $res -ne 0 ]; do
+    sleep $download_retry_interval
+    echo "retrying the ${i}th time for chef server"
+    wget $chef_server_url
+    res=$?
+    i=$((i+1))
+done
+if [ $res -ne 0 ]; then
     echo "download chef server fail!"
     exit 2
 fi
@@ -95,7 +106,16 @@ sudo apt-get install -y git ruby1.9.1-full ruby make g++ zlib1g-dev
 
 # download chef client
 wget $chef_client_url
-if [ $? != 0 ]; then
+res=$?
+i=0
+while [ $i -lt $download_retry_count ] && [ $res -ne 0 ]; do
+    sleep $download_retry_interval
+    echo "retrying the ${i}th time for chef client"
+    wget $chef_client_url
+    res=$?
+    i=$((i+1))
+done
+if [ $? -ne 0 ]; then
     echo "download chef client fail!"
     exit 8
 fi
@@ -146,7 +166,16 @@ fi
 
 # download chef dk
 wget $chef_dk_url
-if [ $? != 0 ]; then
+res=$?
+i=0
+while [ $i -lt $download_retry_count ] && [ $res -ne 0 ]; do
+    sleep $download_retry_interval
+    echo "retrying the ${i}th time for chef dk"
+    wget $chef_dk_url
+    res=$?
+    i=$((i+1))
+done
+if [ $? -ne 0 ]; then
     echo "download chef dk fail!"
     exit 12
 fi
