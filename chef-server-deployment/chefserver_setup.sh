@@ -62,6 +62,7 @@ chef_fqdn="${hostname}.${location}.cloudapp.azure.com"
 # server, because it will use FQDN as the server url
 sudo echo "127.0.1.1 ${chef_fqdn} ${hostname}" >> /etc/hosts
 sudo service hostname restart
+echo "Changing FQDN to ${chef_fqdn}"
 # check if the FQDN is as expected
 res=`hostname -f`
 if [ $res != $chef_fqdn ]; then
@@ -74,6 +75,7 @@ echo "Downloading chef server"
 func_download_deb $chef_server_url
 
 # install chef server
+echo "Installing chef server"
 sudo dpkg -i $chef_server_deb
 if [ $? != 0 ]; then
     echo "dpkg install chef server fail!"
@@ -84,6 +86,7 @@ rm $chef_server_deb
 # reconfigure subcommand is used when configure changes are made to
 # chef server (normally chef-server.rb is modified). And after server
 # is installed, need to do configure
+echo "chef-server-ctl reconfigure"
 sudo chef-server-ctl reconfigure
 if [ $? != 0 ]; then
     echo "reconfigure chef server fail!"
@@ -91,6 +94,7 @@ if [ $? != 0 ]; then
 fi
 
 # install opscode-manage
+echo "Installing opscode-manage module"
 sudo chef-server-ctl install opscode-manage
 if [ $? != 0 ]; then
     echo "opscode-manage install fail!"
@@ -98,6 +102,7 @@ if [ $? != 0 ]; then
 fi
 
 # config opscode-manage
+echo "opscode-manage-ctl reconfigure"
 sudo opscode-manage-ctl reconfigure
 if [ $? != 0 ]; then
     echo "opscode-manage reconfigure fail!"
@@ -105,6 +110,7 @@ if [ $? != 0 ]; then
 fi
 
 # create a new administor user, generate the private key
+echo "Creating admin user: $chef_admin_user"
 chef-server-ctl user-create $chef_admin_user sosse sosse auto@auto.com $chef_damin_pw --filename $chef_admin_pem
 if [ $? != 0 ]; then
     echo "create chef server admin fail!"
@@ -114,6 +120,7 @@ fi
 # create a new organization, associate the new administor user to 
 # this organization, generate the validation key which is needed
 # for the first connection between chef client and chef server
+echo "Creating organization: $chef_org_name"
 chef-server-ctl org-create $chef_org_name "sosse, Inc." --association_user $chef_admin_user --filename $chef_org_pem
 if [ $? != 0 ]; then
     echo "create chef server organization fail!"
@@ -124,6 +131,7 @@ fi
 #                setup chef workstation                   #
 ###########################################################
 # install all dependent packages
+echo "install all dependent packages"
 sudo apt-get -y update
 sudo apt-get install -y git ruby1.9.1-full ruby make g++ zlib1g-dev
 
@@ -132,6 +140,7 @@ echo "Downloading chef client"
 func_download_deb $chef_client_url
 
 # install chef client
+echo "Installing chef client"
 sudo dpkg -i $chef_client_deb
 if [ $? != 0 ]; then
     echo "dpkg install chef client fail!"
@@ -141,6 +150,7 @@ rm $chef_client_deb
 
 # clone chef-repo from github, and this is the working folder of chef
 # workstation
+echo "Clone chef-repo"
 git clone https://github.com/chef/chef-repo.git
 if [ ! -e ./chef-repo ]; then
     echo "clone chef-repo fail!"
@@ -156,6 +166,7 @@ fi
 # move <admin>.pem <validation>.pem knife.rb to .chef folder
 mkdir ./chef-repo/.chef
 
+echo "Copy knife.rb validation.pem admin.pem to .chef folder"
 knife_config="# See https://docs.getchef.com/config_rb_knife.html for more information on knife configuration options
 
 current_dir = File.dirname(__FILE__)
@@ -168,6 +179,7 @@ validation_key           \"#{current_dir}/${chef_org_name}-validator.pem\"
 chef_server_url          \"https://${chef_fqdn}/organizations/${chef_org_name}\"
 cookbook_path            [\"#{current_dir}/../cookbooks\"]"
 
+# generate knife.rb file"
 echo "$knife_config" > knife.rb
 
 mv $chef_admin_pem ./chef-repo/.chef
@@ -184,6 +196,7 @@ if [ $res != $chef_admin_user ]; then
 fi
 
 # download all cookbooks needed
+echo "download all cookbooks needed"
 cd /home/$vm_admin_user/chef-repo/cookbooks
 git clone https://github.com/opscode-cookbooks/chef_handler.git
 git clone https://github.com/sethvargo/chef-sugar.git
@@ -208,6 +221,7 @@ echo "Downloading chef dk"
 func_download_deb $chef_dk_url
 
 # install chef dk
+echo "Installing chef dk"
 sudo dpkg -i $chef_dk_deb
 if [ $? != 0 ]; then
     echo "dpkg install chef dk fail!"
@@ -215,15 +229,15 @@ if [ $? != 0 ]; then
 fi
 rm $chef_dk_deb
 
-# update the bash env for chef
-`chef shell-init bash`
-
-# install knife winodws plugin
-sudo gem install knife-windows
-if [ $? != 0 ]; then
-    echo "install knife-winodows plugin fail!"
-    exit 13
-fi
+## update the bash env for chef
+#`chef shell-init bash`
+#
+## install knife winodws plugin
+#sudo gem install knife-windows
+#if [ $? != 0 ]; then
+#    echo "install knife-winodows plugin fail!"
+#    exit 13
+#fi
 
 
 # change the owner and group to normal user
