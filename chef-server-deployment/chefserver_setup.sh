@@ -1,5 +1,9 @@
 #!/bin/bash
 # setup chef server and chef workstation
+#
+# Usage: $proganme <Azure location string>
+# <Azure location string>: e.g "East Asia", "West US", script will modify
+#                          machine FQDN according to this string
 
 # variables
 chef_server_deb="chef-server-core_12.1.0-1_amd64.deb"
