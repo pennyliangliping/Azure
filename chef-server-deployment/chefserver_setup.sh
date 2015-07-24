@@ -50,7 +50,10 @@ cd /home/$vm_admin_user
 # ensure that the VM name is the same with the beginning of fqdn 
 # in Azure template
 hostname=`hostname`
-chef_fqdn="${hostname}.eastasia.cloudapp.azure.com"
+# $1 is the Azure location string, e.g. 'East Asia', 'West US'
+# need to remove the space and make all characters to lowwer case
+location=`echo $1 | sed -e "s/ //g" | tr "[A-Z]" "[a-z]"`
+chef_fqdn="${hostname}.${location}.cloudapp.azure.com"
 # change the FQDN for the ubuntu server before installing chef 
 # server, because it will use FQDN as the server url
 sudo echo "127.0.1.1 ${chef_fqdn} ${hostname}" >> /etc/hosts
