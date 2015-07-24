@@ -186,6 +186,7 @@ git clone https://github.com/sethvargo/chef-sugar.git
 git clone https://github.com/opscode-cookbooks/openssl.git
 git clone https://github.com/pennyliangliping/windows.git
 git clone https://github.com/pennyliangliping/sql_server.git
+git clone https://github.com/pennyliangliping/sosse.git
 
 # be careful for the cookbook upload order
 # dependency may cause upload failure
@@ -194,6 +195,7 @@ knife cookbook upload chef-sugar
 knife cookbook upload openssl
 knife cookbook upload windows
 knife cookbook upload sql_server
+knife cookbook upload sosse
 
 cd /home/$vm_admin_user/chef-repo/
 
