@@ -149,9 +149,9 @@ fi
 rm $chef_client_deb
 
 # clone chef-repo from github, and this is the working folder of chef
-# workstation
+# workstation. All cookbooks are stored inside chef-repo.
 echo "Clone chef-repo"
-git clone https://github.com/chef/chef-repo.git
+git clone https://github.com/pennyliangliping/chef-repo.git
 if [ ! -e ./chef-repo ]; then
     echo "clone chef-repo fail!"
     exit 10
@@ -195,18 +195,10 @@ if [ $res != $chef_admin_user ]; then
     exit 11
 fi
 
-# download all cookbooks needed
-echo "download all cookbooks needed"
-cd /home/$vm_admin_user/chef-repo/cookbooks
-git clone https://github.com/opscode-cookbooks/chef_handler.git
-git clone https://github.com/sethvargo/chef-sugar.git
-git clone https://github.com/opscode-cookbooks/openssl.git
-git clone https://github.com/pennyliangliping/windows.git
-git clone https://github.com/pennyliangliping/sql_server.git
-git clone https://github.com/pennyliangliping/sosse.git
-
 # be careful for the cookbook upload order
 # dependency may cause upload failure
+echo "upload all cookbooks needed"
+cd /home/$vm_admin_user/chef-repo/cookbooks
 knife cookbook upload chef_handler
 knife cookbook upload chef-sugar
 knife cookbook upload openssl
