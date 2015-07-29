@@ -31,6 +31,8 @@ func_download_deb()
     i=0
     # retry if fail
     while [ $i -lt $download_retry_count ] && [ $res -ne 0 ]; do
+        # remove the invalid download file before retry
+        rm -f $2
         sleep $download_retry_interval
         echo "retrying the ${i}th time"
         wget $1
@@ -72,7 +74,7 @@ fi
 
 # download chef server, and retry if fail some time
 echo "Downloading chef server"
-func_download_deb $chef_server_url
+func_download_deb $chef_server_url $chef_server_deb
 
 # install chef server
 echo "Installing chef server"
@@ -137,7 +139,7 @@ sudo apt-get install -y git ruby1.9.1-full ruby make g++ zlib1g-dev
 
 # download chef client, and retry if fail some time
 echo "Downloading chef client"
-func_download_deb $chef_client_url
+func_download_deb $chef_client_url $chef_client_deb
 
 # install chef client
 echo "Installing chef client"
@@ -210,7 +212,7 @@ cd /home/$vm_admin_user/chef-repo/
 
 # download chef dk
 echo "Downloading chef dk"
-func_download_deb $chef_dk_url
+func_download_deb $chef_dk_url $chef_dk_deb
 
 # install chef dk
 echo "Installing chef dk"
