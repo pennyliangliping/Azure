@@ -153,7 +153,8 @@ rm $chef_client_deb
 # clone chef-repo from github, and this is the working folder of chef
 # workstation. All cookbooks are stored inside chef-repo.
 echo "Clone chef-repo"
-git clone https://github.com/pennyliangliping/chef-repo.git
+git clone https://PennyLLiang:Dell1234@github.com/GitQuest/Spotlight-Azure-Autotesting.git
+mv ./Spotlight-Azure-Autotesting/chef-repo .
 if [ ! -e ./chef-repo ]; then
     echo "clone chef-repo fail!"
     exit 10
