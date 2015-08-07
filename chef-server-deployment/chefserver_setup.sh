@@ -53,6 +53,10 @@ if [ ! -e /home/$vm_admin_user ]; then
 fi
 cd /home/$vm_admin_user
 
+# sleep a while before changing FQDN, sometimes after VM is deployed,
+# not not everything is ready, the hostname of the machine is still
+# "ubuntu"... that is not ready to change FQDN
+sleep 180
 # ensure that the VM name is the same with the beginning of fqdn 
 # in Azure template
 hostname=`hostname`
@@ -239,3 +243,6 @@ rm $chef_dk_deb
 cd /home/$vm_admin_user
 sudo chown -R $vm_admin_user chef-repo/
 sudo chgrp -R $vm_admin_user chef-repo/
+
+echo "All things done!"
+exit 0
